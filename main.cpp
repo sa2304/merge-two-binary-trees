@@ -13,7 +13,7 @@ class TreeReadIterator {
   }
 
   bool atEnd() const {
-    return q_.empty();
+    return at_end_;
   }
 
   TreeNode* current() const {
@@ -21,17 +21,29 @@ class TreeReadIterator {
   }
 
   void next() {
-    if (not q_.empty()) {
+    if (not atEnd()) {
       TreeNode* node = q_.front();
-      if (node) {
-        q_.push(node->left);
-        q_.push(node->right);
-      }
+      if (node) { node_found_at_current_level |= true; }
+      q_.push(node ? node->left : nullptr);
+      q_.push(node ? node->right : nullptr);
       q_.pop();
+      if (--current_level_count_ == 0) {
+        if (not node_found_at_current_level) {
+          at_end_ = true;
+        } else {
+          ++level;
+          current_level_count_ = 1 << level;
+          node_found_at_current_level = false;
+        }
+      }
     }
   }
 
  private:
+  bool at_end_ = false;
+  bool node_found_at_current_level = false;
+  int level = 0;
+  int current_level_count_ = 1;
   queue<TreeNode*> q_;
 };
 
@@ -94,8 +106,13 @@ void TestMergeTrees() {
   Solution s;
   {
     TreeNode *left = stringToTreeNode("[1,3,2,5]"s);
+    prettyPrintTree(left);
+    cout << string(80, '-') << endl;
     TreeNode *right = stringToTreeNode("[2,1,3,null,4,null,7]"s);
-//    prettyPrintTree(s.mergeTrees(left, right));
+    prettyPrintTree(right);
+    cout << string(80, '-') << endl;
+    prettyPrintTree(s.mergeTrees(left, right));
+    cout << string(80, '-') << endl;
 //    assert("[3,4,5,5,4,null,7]"s == treeNodeToString(s.mergeTrees(left, right)));
   }
   {
